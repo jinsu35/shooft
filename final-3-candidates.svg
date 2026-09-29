@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="3150" height="920" viewBox="0 0 3150 920" font-family="-apple-system, 'Apple SD Gothic Neo', sans-serif">
+  <!-- scale: 2 px = 1 mm, top view -->
+  <rect width="3150" height="920" fill="#f6f5f1"/>
+  <text x="80" y="72" font-size="38" font-weight="700" fill="#1d1d1f">최종 후보 3개 크기 비교 — 위에서 본 모습 (같은 비율, 2px = 1mm)</text>
+  <text x="80" y="112" font-size="22" fill="#666">①②는 같은 모델(FS23)이라 크기가 동일합니다 · 맨 오른쪽 점선은 미싱 페달(참고용)</text>
+
+  <line x1="60" y1="760" x2="3090" y2="760" stroke="#ccc" stroke-width="2"/>
+
+  <!-- 1) Coupang FS23-P 49,000 -->
+  <g transform="translate(120,472)">
+    <path d="M40 0 H694 Q734 0 734 40 V248 Q734 288 694 288 H40 Q0 288 0 248 V40 Q0 0 40 0 Z" fill="#232326"/>
+    <rect x="46" y="26" width="186" height="236" rx="20" fill="#3a3a40"/>
+    <rect x="274" y="26" width="186" height="236" rx="20" fill="#3a3a40"/>
+    <rect x="502" y="26" width="186" height="236" rx="20" fill="#3a3a40"/>
+    <g fill="#e05252" font-size="26" font-weight="700" text-anchor="middle">
+      <text x="139" y="155">Shift</text><text x="367" y="155">Shift</text><text x="595" y="155">Shift</text>
+    </g>
+    <line x1="0" y1="318" x2="734" y2="318" stroke="#d33" stroke-width="3"/>
+    <line x1="0" y1="308" x2="0" y2="328" stroke="#d33" stroke-width="3"/><line x1="734" y1="308" x2="734" y2="328" stroke="#d33" stroke-width="3"/>
+    <text x="367" y="353" font-size="24" fill="#d33" text-anchor="middle" font-weight="700">367 mm</text>
+    <line x1="-30" y1="0" x2="-30" y2="288" stroke="#d33" stroke-width="3"/>
+    <line x1="-40" y1="0" x2="-20" y2="0" stroke="#d33" stroke-width="3"/><line x1="-40" y1="288" x2="-20" y2="288" stroke="#d33" stroke-width="3"/>
+    <text x="-45" y="144" font-size="24" fill="#d33" text-anchor="middle" font-weight="700" transform="rotate(-90 -45 144)">144 mm</text>
+  </g>
+  <text x="487" y="330" font-size="30" font-weight="700" fill="#1d1d1f" text-anchor="middle">① 쿠팡 FS23-P</text>
+  <text x="487" y="368" font-size="23" fill="#444" text-anchor="middle">₩49,000 · 내일(9/20) 도착 보장</text>
+  <text x="487" y="404" font-size="22" fill="#c2410c" text-anchor="middle">맥 작동 미확인 · 판매자 "프로그램 켜둬야" 답변</text>
+  <text x="487" y="438" font-size="22" fill="#555" text-anchor="middle">면적 약 528cm² · 광전식(무음)</text>
+
+  <!-- 2) Coupang FS23-P 40,000 -->
+  <g transform="translate(994,472)">
+    <path d="M40 0 H694 Q734 0 734 40 V248 Q734 288 694 288 H40 Q0 288 0 248 V40 Q0 0 40 0 Z" fill="#232326"/>
+    <rect x="46" y="26" width="186" height="236" rx="20" fill="#3a3a40"/>
+    <rect x="274" y="26" width="186" height="236" rx="20" fill="#3a3a40"/>
+    <rect x="502" y="26" width="186" height="236" rx="20" fill="#3a3a40"/>
+    <g fill="#e05252" font-size="26" font-weight="700" text-anchor="middle">
+      <text x="139" y="155">Shift</text><text x="367" y="155">Shift</text><text x="595" y="155">Shift</text>
+    </g>
+    <line x1="0" y1="318" x2="734" y2="318" stroke="#d33" stroke-width="3"/>
+    <line x1="0" y1="308" x2="0" y2="328" stroke="#d33" stroke-width="3"/><line x1="734" y1="308" x2="734" y2="328" stroke="#d33" stroke-width="3"/>
+    <text x="367" y="353" font-size="24" fill="#d33" text-anchor="middle" font-weight="700">367 mm</text>
+  </g>
+  <text x="1361" y="330" font-size="30" font-weight="700" fill="#1d1d1f" text-anchor="middle">② 쿠팡 FS23-P (제로뷰티)</text>
+  <text x="1361" y="368" font-size="23" fill="#444" text-anchor="middle">₩40,000 · 9/22(화) 도착 예정</text>
+  <text x="1361" y="404" font-size="22" fill="#c2410c" text-anchor="middle">맥 작동 미확인 · ①과 같은 모델</text>
+  <text x="1361" y="438" font-size="22" fill="#555" text-anchor="middle">면적 약 528cm² · 광전식(무음)</text>
+
+  <!-- 3) AliExpress FS2020U1 -->
+  <g transform="translate(1868,460)">
+    <path d="M42 0 H708 Q750 0 750 42 V258 Q750 300 708 300 H42 Q0 300 0 258 V42 Q0 0 42 0 Z" fill="#1c1c20"/>
+    <rect x="48" y="28" width="190" height="244" rx="20" fill="#3d3d44"/>
+    <rect x="280" y="28" width="190" height="244" rx="20" fill="#3d3d44"/>
+    <rect x="512" y="28" width="190" height="244" rx="20" fill="#3d3d44"/>
+    <g fill="#e05252" font-size="26" font-weight="700" text-anchor="middle">
+      <text x="143" y="160">Shift</text><text x="375" y="160">Shift</text><text x="607" y="160">Shift</text>
+    </g>
+    <line x1="0" y1="330" x2="750" y2="330" stroke="#d33" stroke-width="3"/>
+    <line x1="0" y1="320" x2="0" y2="340" stroke="#d33" stroke-width="3"/><line x1="750" y1="320" x2="750" y2="340" stroke="#d33" stroke-width="3"/>
+    <text x="375" y="365" font-size="24" fill="#d33" text-anchor="middle" font-weight="700">375 mm</text>
+    <line x1="-30" y1="0" x2="-30" y2="300" stroke="#d33" stroke-width="3"/>
+    <line x1="-40" y1="0" x2="-20" y2="0" stroke="#d33" stroke-width="3"/><line x1="-40" y1="300" x2="-20" y2="300" stroke="#d33" stroke-width="3"/>
+    <text x="-45" y="150" font-size="24" fill="#d33" text-anchor="middle" font-weight="700" transform="rotate(-90 -45 150)">150 mm</text>
+  </g>
+  <rect x="1868" y="300" width="750" height="4" fill="#15803d"/>
+  <text x="2243" y="330" font-size="30" font-weight="700" fill="#1d1d1f" text-anchor="middle">③ 알리 FS2020U1 — 추천</text>
+  <text x="2243" y="368" font-size="23" fill="#444" text-anchor="middle">약 ₩30,000 · 빠르면 3일</text>
+  <text x="2243" y="404" font-size="22" fill="#15803d" font-weight="700" text-anchor="middle">맥 작동 구매자 리뷰 확인 · 가장 큼</text>
+  <text x="2243" y="438" font-size="22" fill="#555" text-anchor="middle">면적 약 563cm² · 리뷰 54개 / 4.9점</text>
+
+  <!-- reference: sewing pedal -->
+  <g transform="translate(2778,450)">
+    <rect width="190" height="310" rx="24" fill="none" stroke="#999" stroke-width="4" stroke-dasharray="12 9"/>
+    <text x="95" y="150" font-size="22" fill="#777" text-anchor="middle">미싱 페달</text>
+    <text x="95" y="182" font-size="20" fill="#777" text-anchor="middle">약 95×155mm</text>
+    <text x="95" y="214" font-size="20" fill="#777" text-anchor="middle">(추정치)</text>
+  </g>
+  <text x="2873" y="404" font-size="24" font-weight="700" fill="#666" text-anchor="middle">참고 기준</text>
+</svg>

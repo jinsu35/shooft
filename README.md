@@ -1,0 +1,184 @@
+# shooft
+
+발로 밟는 Shift 키. 페달을 밟고 있는 동안 키보드로 친 글자가 대문자가 됩니다.
+
+## 왜 앱이 필요한가
+
+macOS는 Shift 같은 조합키 상태를 키보드마다 따로 관리합니다. 그래서 페달이 Shift를
+보내도, 맥북 키보드로 친 글자에는 적용되지 않습니다. Karabiner-Elements는 모든 입력을
+하나의 가상 키보드로 다시 내보내서 이 문제를 해결합니다.
+
+이 프로토타입은 더 가벼운 방법을 시험합니다. **새 키 입력을 만들어 보내는 대신, 이미
+지나가고 있는 키 입력에 Shift 플래그만 붙입니다.** 이 방법이 통하면 출시용 앱에
+DriverKit 드라이버 없이 손쉬움(Accessibility) 권한만으로 충분합니다.
+
+이 구분이 중요한 이유는 배포 방식 때문입니다.
+
+- **플래그 수정으로 충분하면:** 앱이 단순해지고, App Store 샌드박스에서도 될 가능성이 있습니다.
+- **안 되면:** Karabiner처럼 DriverKit 가상 키보드가 필요합니다. 개발량이 훨씬 많고,
+  App Store에 내려면 Apple의 별도 승인(virtual HID entitlement)을 받아야 합니다.
+
+## 메뉴바 앱 (ShooftApp/)
+
+배포용 앱입니다. 프로토타입의 엔진을 그대로 쓰고 AppKit/SwiftUI 껍데기를 얹었습니다.
+
+```
+cd ShooftApp
+./scripts/build-app.sh          # dist/Shooft.app + zip. 키체인에 "Apple Development" 인증서가 있으면 그걸로 서명
+RELEASE=1 ./scripts/build-app.sh   # Developer ID 서명 + 공증 + 스테이플. 남에게 줄 수 있는 zip
+SANDBOX=1 ./scripts/build-app.sh   # App Sandbox 실험용 빌드 → dist/Shooft-sandbox.app (번들 ID 다름)
+swift scripts/make-icon.swift Resources   # 앱 아이콘 다시 그리기 → Resources/AppIcon.icns
+```
+
+- 메뉴바 아이콘만 있고 Dock에는 안 뜹니다. 첫 실행 때 손쉬움 권한을 요청하고, 허용되면 자동 시작합니다.
+- 페달을 꽂으면 자동 감지합니다. 공장 기본값(a/b/c) 그대로면 세 페달을 모두 "발 Shift"로 바꿔 줍니다.
+- 설정 창에서 페달 3개를 각각 바꿀 수 있습니다. macOS 단축키 설정과 같은 방식으로, 페달 줄의 **칸을
+  클릭하고 원하는 키를 치면** 됩니다. 조합키만 눌렀다 떼면 "밟는 동안 유지", ⌘Z처럼 같이 누르면 그 조합,
+  Esc는 취소. 키보드에 없는 키(F17~F20, 숫자패드)는 칸 옆 `▾` 메뉴에서 고릅니다.
+  - **밟는 동안 유지**: ⇧ Shift / ⌃ Control / ⌥ Option / ⌘ Command. 페달에는 F13~F16이 저장되고,
+    앱이 밟는 동안 해당 조합키 플래그를 붙입니다. 앱이 켜져 있어야 동작합니다.
+  - **키 하나 입력**: Enter, Space, 문자, F키 등. 옆의 ⌃⌥⇧⌘ 버튼으로 함께 누를 조합키를 고릅니다.
+    페달 혼자 보내므로 앱 없이도 동작합니다.
+- 로그인 시 자동 실행 토글 (SMAppService).
+- 서명: ad-hoc 빌드는 빌드할 때마다 서명이 바뀌어 손쉬움 권한을 다시 줘야 합니다. 그래서 빌드
+  스크립트는 키체인에 Apple Development 인증서가 있으면 자동으로 그걸로 서명합니다(팀 ID 기준으로
+  권한이 유지됨). 배포 인증서(Apple Distribution / Developer ID)가 있는 팀의 인증서를 우선 고르므로,
+  나중에 Developer ID로 바꿔도 같은 팀이면 권한이 그대로입니다. 공증에는 Apple 개발자 프로그램(연 $99)이
+  필요합니다.
+- 권한 스위치가 켜져 있는데 앱이 "권한 필요"라고 하면: 이전 서명(ad-hoc 등)으로 등록된 항목이 남은 것.
+  `tccutil reset Accessibility com.jinsukim.shooft` 후 앱을 다시 켜고 스위치를 다시 켠다. 앱은
+  `~/Library/Logs/shooft.log`에 `trusted=…, engine running=…`을 남긴다.
+- 페달 없이 엔진만 검사하기: 손쉬움 권한이 있는 터미널에서 F13 ↓, F19 ↓↑, F13 ↑ 를 HID 레벨로 넣고
+  꼬리쪽 listen 탭으로 F19에 Shift가 붙어 나오는지 봅니다. (`scripts/taptest.swift`, 글자 대신 F19를
+  써서 아무것도 타이핑되지 않음.)
+
+## GitHub 릴리스
+
+`.github/workflows/release.yml`이 `v*` 태그를 푸시하면 macOS 러너에서 서명·공증하고 zip을 릴리스에
+붙입니다. 저장소 Secrets에 Developer ID 인증서(.p12, base64)와 App Store Connect API 키가 필요합니다.
+목록은 워크플로 파일 머리에 있습니다. 서명 파일(.p8/.p12/.cer/.key)은 `.gitignore`로 막혀 있습니다.
+
+## 빌드 (프로토타입 CLI)
+
+```
+swiftc -O shooft.swift -o shooft
+```
+
+## 권한
+
+권한은 `./shooft` 자체가 아니라 **터미널 앱**(Terminal, iTerm 등)에 줍니다.
+
+- **손쉬움** — 항상 필요. 처음 실행하면 요청 창이 뜹니다.
+- **입력 모니터링** — 페달을 기기로 직접 감시하는 기본 모드에 필요. 없으면 F13 모드로 넘어갑니다.
+
+시스템 설정 > 개인정보 보호 및 보안 > 손쉬움 / 입력 모니터링
+
+## 사용법
+
+```
+./shooft pick                  # 키나 페달을 눌러서 무엇이 오는지 확인
+./shooft list                  # 키보드로 인식되는 HID 기기 목록
+./shooft run                   # 실행. PCsensor 페달을 찾고, 없으면 F13을 트리거로 씀
+./shooft run --keycode 105     # 키코드만 트리거로 쓰기 (105 = F13)
+./shooft program               # 페달 3개가 지금 어떤 키를 보내는지 읽기
+./shooft program f13           # 페달 3개를 모두 F13으로 설정 (페달 안에 저장됨)
+./shooft program a b c         # 공장 기본값으로 원복
+```
+
+`program`은 페달의 설정용 HID 인터페이스에 오픈소스 `footswitch`와 같은 프로토콜로 써 넣습니다.
+ElfKey가 하는 일을 앱이 직접 하는 것이고, 일반 권한으로 됩니다. **권장 흐름은 `program f13` 한 번
+뒤에 `run --keycode 105`** 입니다. 이 경로는 손쉬움 권한 하나만 필요하고 타이밍 판정이 전혀 없습니다.
+
+`run` 옵션:
+
+| 옵션 | 뜻 |
+|---|---|
+| `--device <v:p>` | 이 HID 기기를 페달로 감시. 어떤 키를 보내든 상관없음. 기본값 `3553:b001`(PCsensor) |
+| `--seize` | 기기를 통째로 가로채서 키 입력이 macOS에 아예 안 닿게 함. **root 필요**(`sudo`) |
+| `--keycode <n>` | 기기 대신 키코드를 트리거로 씀 |
+| `--max-hold <초>` | 이 시간 넘게 밟고만 있고 타자를 안 치면 Shift를 적용하지 않음. 기본값 0(끔) |
+| `--quiet` | 키 입력마다 찍히는 로그 끄기 |
+
+기기 모드(기본)는 페달을 **공유로 열어서** 밟힘 여부를 직접 읽고, 페달이 보내는 키 입력
+(공장 기본값 `a`/`b`/`c`)은 이벤트 탭에서 버립니다. 그래서 ElfKey로 미리 설정하지 않아도
+됩니다. HID 보고가 키 입력보다 몇 ms 먼저 오므로, 밟은 직후 0.15초 안에 온 keyDown과
+그 자동 반복·keyUp만 페달 것으로 보고 버리고, 그 뒤에 오는 같은 글자는 키보드 것으로
+통과시킵니다. 밟은 채 키보드로 `a`를 쳐도 `A`가 나옵니다.
+
+## 페달 없이 지금 테스트하기
+
+1. `./shooft pick` 을 실행하고, 트리거로 쓸 키를 누릅니다. 키코드가 찍힙니다.
+   (오른쪽 Option은 보통 61입니다.)
+2. `./shooft run --keycode 61` 로 실행합니다.
+3. 오른쪽 Option을 누른 채로 `a` 를 칩니다.
+   - **`A` 가 나오면 성공입니다.** 플래그 수정만으로 된다는 뜻입니다.
+   - **`a` 가 나오면** 이 방법으로는 부족하고, DriverKit 쪽으로 가야 합니다.
+
+여러 앱에서 확인해보세요. 텍스트 편집기, 브라우저 주소창, 터미널, Slack처럼 입력을
+직접 처리하는 앱에서 결과가 다를 수 있습니다.
+
+## 페달로 테스트하기
+
+페달은 PCsensor FS2020U1 3페달(375 × 150 mm)이고, 2026-09-27 도착해서 연결돼 있습니다.
+
+1. `./shooft run` 을 실행합니다. `Watching device 3553:b001` 이 찍히면 페달을 찾은 것입니다.
+2. 페달을 밟은 채 글자를 칩니다. 대문자가 나오고, 페달의 `a`/`b`/`c`가 찍히지 않아야 합니다.
+3. 페달 3개를 각각 시험합니다. 어느 것을 밟아도 동작해야 합니다.
+
+2026-09-27 실제 결과: 페달 1·2·3 각각 밟은 채 `a`/`b`/`c`를 쳐서 `ABCABCABC`, 뗀 뒤
+`abc`. 페달 자체 글자는 새지 않음. **ElfKey 설정 없이 동작 확인.**
+
+F13으로 바꾸고 싶으면 ElfKey(맥 버전)로 **페달 3개를 모두 F13으로** 설정합니다.
+맥 키보드에는 F13이 없어서 들어온 F13은 반드시 페달이 보낸 것이고, 3개를 같은 키로
+두면 발을 어디에 올려도 동작합니다. 그 뒤엔 `./shooft run --keycode 105` 로도 됩니다.
+
+## 검증 결과 (2026-09-27, PCsensor FS2020U1)
+
+- **페달이 `a`를 보내는 채로 쓰면 근본적인 충돌이 있습니다.** macOS는 같은 키코드를 기기별로
+  구분하지 않고 합칩니다. 페달이 `a`를 쥐고 있는 동안 키보드 `a`는 자동 반복 플래그를 달고
+  오고, 두 번째 keyUp은 아예 오지 않습니다. 이벤트의 keyboardType(페달 40, 맥북 91)으로
+  구분하는 임시방편을 넣어뒀지만, 외장 키보드가 같은 타입 값을 쓰면 다시 깨집니다.
+  **그래서 페달을 F13으로 설정하는 게 정답이고, `program f13`이 그걸 앱 안에서 합니다.**
+- **소프트웨어 지연은 없습니다.** HID 보고에서 이벤트 탭까지 대부분 1ms 미만, 최대 15ms.
+  "밟자마자 `a`"가 소문자로 나온 경우는 전부 `a`가 F13보다 7~42ms **먼저** 도착한
+  경우였습니다. 즉 발이 신호를 내기 전에 손가락이 먼저 닿은 것이고, 키보드 Shift도 같은
+  조건이면 소문자가 됩니다. 앱이 키 입력을 붙잡아 두지 않는 한 고칠 수 없고, 붙잡으면 타자
+  전체가 느려지므로 하지 않습니다. 줄이려면 페달 쪽 이동 거리·디바운스를 줄여야 합니다(하드웨어).
+
+- **플래그 수정만으로 대문자가 나옵니다.** 페달을 밟은 채 키보드를 치면 대문자가
+  입력됩니다. 즉 **DriverKit 가상 키보드가 필요 없습니다.** 손쉬움 권한만으로 동작합니다.
+- **페달은 밟고 있는 동안 키를 유지합니다.** `pick` 로그에서 키가 0.085초 간격으로
+  자동 반복되는 것으로 확인했습니다. macOS는 실제로 눌려 있는 키만 반복시킵니다.
+- **페달이 맥에 키보드로 인식됩니다.** `FootSwitch`, vendor `0x3553`, product `0xb001`.
+  이 ID는 오픈소스 `footswitch` CLI가 지원하는 조합이기도 합니다.
+- **공장 기본값은 페달 3개가 각각 `a`, `b`, `c`** 입니다.
+- **페달을 통째로 가로채는(seize) 건 root만 됩니다.** 입력 모니터링 권한이 있어도
+  키보드 인터페이스를 seize하면 `kIOReturnNotPrivileged`(0xe00002c1)가 납니다.
+  Karabiner가 root 데몬(karabiner_grabber)을 두는 이유입니다. 그래서 일반 앱은
+  공유로 열고(이건 입력 모니터링만으로 됨) 페달의 키 입력을 이벤트 탭에서 버려야 합니다.
+- **페달은 HID 인터페이스가 두 개**입니다. 키보드 인터페이스(usage 1/6, 1/2, 12/1)와
+  설정용 벤더 인터페이스(usage 1/0). 키보드 인터페이스는 키별 요소(usage 4/5/6)와
+  원시 배열 슬롯(usage `0xFFFFFFFF`, 값이 usage) 양쪽으로 같은 키를 알려주므로
+  원시 슬롯은 무시합니다. 설정용 쪽은 일반 권한으로도 열리고 seize도 되므로,
+  오픈소스 `footswitch` CLI가 쓰는 프로토콜로 **앱이 직접 페달을 F13으로 프로그래밍**할 수
+  있을 것으로 보입니다.
+
+## 남은 것
+
+- [x] 기기 모드(`./shooft run`)를 페달로 실제 확인 — 대문자가 나오고 `a`/`b`/`c`는 안 찍힘 (2026-09-27)
+- [x] 페달을 F13으로 변경 — `shooft program f13`으로 앱이 직접 (2026-09-27)
+- [x] 샌드박스 안에서도 되는지 확인 → **안 됨** (2026-09-29). 같은 코드·같은 서명으로 `SANDBOX=1` 빌드만
+      app-sandbox 엔타이틀먼트를 붙여 실험. 손쉬움 목록에서 스위치를 켜도 앱 안에서 `AXIsProcessTrusted()`가
+      계속 false, 이벤트 탭 생성 불가. 일반 빌드는 켜자마자 true + 탭 동작(taptest PASS).
+      **결론: App Store(샌드박스 필수) 불가, Developer ID 배포로 확정.**
+- [ ] 조합키 상태를 직접 추적하는 앱(게임, 터미널 등)에서의 동작 확인
+- [x] 메뉴바 앱으로 감싸기, 로그인 시 자동 실행, 페달 매핑 UI (2026-09-27, ShooftApp/)
+- [ ] Developer ID 서명 + 공증. 공증 자격 증명은 App Store Connect API 키로 키체인 프로필 `shooft`에
+      저장 완료 (2026-09-29, 앱 암호 불필요). **Developer ID Application 인증서만 남음.** Apple이 API로는
+      "계정 소유자만 가능"이라 거부하므로 소유자 계정으로 한 번 만들어야 함:
+      developer.apple.com/account/resources/certificates/add → Developer ID Application → G2 Sub-CA →
+      `~/.steft-signing/DeveloperID.certSigningRequest` 업로드 → .cer 다운로드 →
+      `./scripts/setup-signing.sh ~/Downloads/developerID_application.cer` → `RELEASE=1 ./scripts/build-app.sh`.
+      (또는 Xcode > Settings > Accounts > Manage Certificates > + > Developer ID Application 후 바로 RELEASE=1 빌드.)
+- [x] 앱 아이콘 (2026-09-28, `scripts/make-icon.swift`가 그림)
+- [ ] 발을 올려두기만 해도 Shift가 눌리는 문제 — `--max-hold` 기본값 정하기

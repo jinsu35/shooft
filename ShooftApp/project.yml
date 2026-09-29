@@ -1,0 +1,28 @@
+# xcodegen spec. `xcodegen generate` → Shooft.xcodeproj (used for archive/export with
+# automatic Developer ID signing; day-to-day builds still use SwiftPM via scripts/build-app.sh).
+name: Shooft
+options:
+  bundleIdPrefix: com.jinsukim
+  deploymentTarget:
+    macOS: "13.0"
+  xcodeVersion: "16.0"
+settings:
+  base:
+    DEVELOPMENT_TEAM: ZMNHA8M2N8
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_VERSION: "5.9"
+targets:
+  Shooft:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/Shooft
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.jinsukim.shooft
+        PRODUCT_NAME: Shooft
+        INFOPLIST_FILE: Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        ENABLE_HARDENED_RUNTIME: YES
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
