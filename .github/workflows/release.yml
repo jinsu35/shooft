@@ -1,0 +1,44 @@
+# Builds, signs, notarizes and attaches Shooft.zip to a GitHub release.
+# Trigger: push a tag like v0.1.0.
+#
+# Repository secrets needed (Settings > Secrets and variables > Actions):
+#   DEVELOPER_ID_P12          base64 of a .p12 export of the "Developer ID Application" identity
+#   DEVELOPER_ID_P12_PASSWORD password used when exporting the .p12
+#   ASC_KEY_ID                App Store Connect API key id      (e.g. M86M2P2SR2)
+#   ASC_ISSUER_ID             App Store Connect issuer id
+#   ASC_KEY_P8                contents of AuthKey_<id>.p8
+name: release
+on:
+  push:
+    tags: ["v*"]
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Import signing certificate
+        env:
+          P12: ${{ secrets.DEVELOPER_ID_P12 }}
+          P12_PASSWORD: ${{ secrets.DEVELOPER_ID_P12_PASSWORD }}
+        run: |
+          echo "$P12" | base64 --decode > cert.p12
+          security create-keychain -p ci build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p ci build.keychain
+          security import cert.p12 -k build.keychain -P "$P12_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k ci build.keychain
+          rm cert.p12
+      - name: Store notarization credentials
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          echo "$ASC_KEY_P8" > AuthKey.p8
+          xcrun notarytool store-credentials shooft --key AuthKey.p8 --key-id "${{ secrets.ASC_KEY_ID }}" --issuer "${{ secrets.ASC_ISSUER_ID }}"
+          rm AuthKey.p8
+      - name: Build, sign, notarize
+        working-directory: ShooftApp
+        run: RELEASE=1 ./scripts/build-app.sh
+      - name: Attach to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ShooftApp/dist/shooft-*.zip
