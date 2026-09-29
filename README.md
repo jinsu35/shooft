@@ -173,12 +173,9 @@ F13으로 바꾸고 싶으면 ElfKey(맥 버전)로 **페달 3개를 모두 F13�
       **결론: App Store(샌드박스 필수) 불가, Developer ID 배포로 확정.**
 - [ ] 조합키 상태를 직접 추적하는 앱(게임, 터미널 등)에서의 동작 확인
 - [x] 메뉴바 앱으로 감싸기, 로그인 시 자동 실행, 페달 매핑 UI (2026-09-27, ShooftApp/)
-- [ ] Developer ID 서명 + 공증. 공증 자격 증명은 App Store Connect API 키로 키체인 프로필 `shooft`에
-      저장 완료 (2026-09-29, 앱 암호 불필요). **Developer ID Application 인증서만 남음.** Apple이 API로는
-      "계정 소유자만 가능"이라 거부하므로 소유자 계정으로 한 번 만들어야 함:
-      developer.apple.com/account/resources/certificates/add → Developer ID Application → G2 Sub-CA →
-      `~/.steft-signing/DeveloperID.certSigningRequest` 업로드 → .cer 다운로드 →
-      `./scripts/setup-signing.sh ~/Downloads/developerID_application.cer` → `RELEASE=1 ./scripts/build-app.sh`.
-      (또는 Xcode > Settings > Accounts > Manage Certificates > + > Developer ID Application 후 바로 RELEASE=1 빌드.)
+- [x] Developer ID 서명 + 공증 (2026-09-29). 인증서는 Xcode > Settings > Apple Accounts > 팀 > Manage
+      Certificates… > + 로 생성(계정 소유자 jinsukim21@icloud.com). 공증은 App Store Connect API 키로 키체인
+      프로필 `shooft`에 저장. `RELEASE=1 ./scripts/build-app.sh` 한 줄로 서명·공증·스테이플·zip.
+      첫 릴리스: https://github.com/jinsu35/shooft/releases/tag/v0.1.0
 - [x] 앱 아이콘 (2026-09-28, `scripts/make-icon.swift`가 그림)
 - [ ] 발을 올려두기만 해도 Shift가 눌리는 문제 — `--max-hold` 기본값 정하기
