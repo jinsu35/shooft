@@ -12,7 +12,19 @@ on:
   push:
     tags: ["v*"]
 jobs:
+  check:
+    # Skip the signing job (instead of failing) when the repository has no signing secrets yet.
+    runs-on: ubuntu-latest
+    outputs:
+      has_secrets: ${{ steps.s.outputs.has_secrets }}
+    steps:
+      - id: s
+        env:
+          P12: ${{ secrets.DEVELOPER_ID_P12 }}
+        run: echo "has_secrets=$([ -n "$P12" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
   build:
+    needs: check
+    if: needs.check.outputs.has_secrets == 'true'
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
