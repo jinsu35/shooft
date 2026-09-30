@@ -1,9 +1,9 @@
 #!/bin/zsh
 # Builds Shooft.app (universal), signs it, and optionally notarizes it.
 #
-#   ./scripts/build-app.sh                 # for this Mac: signs with your "Apple Development" cert if you
-#                                          # have one (Accessibility permission then survives rebuilds),
-#                                          # otherwise ad-hoc
+#   ./scripts/build-app.sh                 # for this Mac: signs with your "Developer ID Application" cert if
+#                                          # present, else "Apple Development", else ad-hoc. A stable identity
+#                                          # keeps the Accessibility permission across rebuilds.
 #   RELEASE=1 ./scripts/build-app.sh       # Developer ID signed + notarized + stapled zip, ready to share.
 #                                          # Uses the "Developer ID Application" cert in the keychain and the
 #                                          # notarytool keychain profile "shooft" (see scripts/setup-signing.sh)
@@ -40,6 +40,11 @@ if [[ -n "${SANDBOX:-}" ]]; then
 fi
 
 IDENTITY="${CODESIGN_IDENTITY:-}"
+# Local builds prefer the Developer ID identity too, so the app keeps the same code
+# signature (and its Accessibility grant) as release builds.
+if [[ -z "$IDENTITY" ]]; then
+  IDENTITY=$(security find-identity -v -p codesigning 2>/dev/null | grep -o '"Developer ID Application: [^"]*"' | head -1 | tr -d '"' || true)
+fi
 if [[ -n "${RELEASE:-}" ]]; then
   if [[ -z "$IDENTITY" ]]; then
     IDENTITY=$(security find-identity -v -p codesigning 2>/dev/null | grep -o '"Developer ID Application: [^"]*"' | head -1 | tr -d '"' || true)

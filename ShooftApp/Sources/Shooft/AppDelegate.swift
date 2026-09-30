@@ -21,8 +21,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             DispatchQueue.main.async { self?.statusItem.menu = self?.buildMenu() }
         }
 
+        // Do not call the system permission prompt here: macOS shows it from a
+        // separate process that outlives this app, so quitting would leave an
+        // orphan "Accessibility Access" dialog behind. The settings window has a
+        // button that asks for the permission when the user wants it.
         if !ShiftEngine.accessibilityGranted {
-            model.requestAccessibility()  // shows the system prompt once
             showSettings()
         }
     }
