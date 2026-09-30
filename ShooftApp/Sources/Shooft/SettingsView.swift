@@ -77,7 +77,7 @@ struct SettingsView: View {
                         .keyboardShortcut(.defaultAction)
                         .disabled(model.busy || !model.hasUnsavedChanges)
                 }
-                Text("칸을 클릭한 뒤 원하는 키를 누르세요. Shift 같은 조합키만 눌렀다 떼면 \"밟는 동안 유지\"가 되고, ⌘Z처럼 같이 누르면 그 조합을 한 번 칩니다. 설정은 페달 안에 저장되어 다른 컴퓨터에서도 유지되지만, \"밟는 동안 유지\"는 이 앱이 켜져 있을 때만 동작합니다.")
+                Text("칸을 클릭한 뒤 원하는 키를 누르세요. Shift 같은 조합키만 눌렀다 떼면 \"밟는 동안 유지\"가 되고, ⌘Z처럼 같이 누르면 그 조합을 한 번 칩니다. 한/영(Caps Lock)이나 지구본 키를 누르면 그 키가 하는 macOS 단축키로 바뀝니다. 설정은 페달 안에 저장되어 다른 컴퓨터에서도 유지되지만, \"밟는 동안 유지\"는 이 앱이 켜져 있을 때만 동작합니다.")
                     .font(.caption).foregroundStyle(.secondary)
             } else {
                 Text("PCsensor 풋스위치를 USB로 연결하면 여기에서 세 페달의 동작을 바꿀 수 있습니다.")
@@ -139,6 +139,11 @@ struct PedalRowView: View {
                 Section("밟는 동안 유지") {
                     ForEach(FootModifier.allCases) { m in
                         Button(m.label) { row = PedalRow(.foot(m)) }
+                    }
+                }
+                Section("시스템 동작") {
+                    ForEach(SystemAction.allCases, id: \.label) { action in
+                        Button(action.label + " (" + action.setting.shortcutText + ")") { row = PedalRow(action.setting) }
                     }
                 }
                 Section("키") {

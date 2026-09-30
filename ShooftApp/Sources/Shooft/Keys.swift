@@ -173,6 +173,19 @@ enum PedalSetting: Equatable {
         switch self {
         case .foot(let m): return "\(m.label) (밟는 동안)"
         case .key(let usage, let mods):
+            if let action = SystemAction.matching(self) {
+                return action.label + " (" + PedalSetting.key(usage: usage, modifiers: mods).shortcutText + ")"
+            }
+            return shortcutText
+        case .other(let text): return text
+        }
+    }
+
+    /// "⌃Space"-style text for a plain key with modifiers.
+    var shortcutText: String {
+        switch self {
+        case .foot(let m): return m.label
+        case .key(let usage, let mods):
             var parts: [String] = []
             if mods.contains(.control) { parts.append("⌃") }
             if mods.contains(.option) { parts.append("⌥") }
@@ -188,4 +201,64 @@ enum PedalSetting: Equatable {
         .key(usage: 0x04, modifiers: []), .key(usage: 0x05, modifiers: []), .key(usage: 0x06, modifiers: []),
     ]
     static let allShift: [PedalSetting] = [.foot(.shift), .foot(.shift), .foot(.shift)]
+}
+
+/// Things the pedal can do that are really macOS keyboard shortcuts. The pedal
+/// sends the shortcut's key + modifiers; macOS does the rest. Used for keys a
+/// pedal cannot send itself (한/영 = Caps Lock or Globe on Korean Macs, Globe).
+enum SystemAction: CaseIterable {
+    case switchInputSource  // 한/영 전환: symbolic hotkey 60 ("이전 입력 소스 선택"), default ⌃Space
+    case emojiPicker        // 이모지 입력기: ⌃⌘Space
+    case spotlight          // Spotlight: symbolic hotkey 64, default ⌘Space
+
+    var label: String {
+        switch self {
+        case .switchInputSource: return "한/영 전환"
+        case .emojiPicker: return "이모지 입력기"
+        case .spotlight: return "Spotlight"
+        }
+    }
+
+    /// What to store in the pedal for this action on this Mac.
+    var setting: PedalSetting {
+        switch self {
+        case .switchInputSource: return SystemAction.hotkey(60) ?? .key(usage: 0x2C, modifiers: [.control])
+        case .emojiPicker: return .key(usage: 0x2C, modifiers: [.control, .command])
+        case .spotlight: return SystemAction.hotkey(64) ?? .key(usage: 0x2C, modifiers: [.command])
+        }
+    }
+
+    static func matching(_ setting: PedalSetting) -> SystemAction? {
+        allCases.first { $0.setting == setting }
+    }
+
+    /// Reads a macOS symbolic hotkey (System Settings > Keyboard > Shortcuts).
+    /// parameters = [character, virtual keycode, NSEvent modifier flags].
+    private static func hotkey(_ id: Int) -> PedalSetting? {
+        guard let all = UserDefaults(suiteName: "com.apple.symbolichotkeys")?.dictionary(forKey: "AppleSymbolicHotKeys"),
+              let entry = all["\(id)"] as? [String: Any],
+              (entry["enabled"] as? Bool ?? true),
+              let value = entry["value"] as? [String: Any],
+              let params = value["parameters"] as? [Int], params.count == 3,
+              let key = PlainKey.from(keycode: params[1])
+        else { return nil }
+        let flags = params[2]
+        var mods: PedalModifiers = []
+        if flags & (1 << 18) != 0 { mods.insert(.control) }
+        if flags & (1 << 19) != 0 { mods.insert(.option) }
+        if flags & (1 << 17) != 0 { mods.insert(.shift) }
+        if flags & (1 << 20) != 0 { mods.insert(.command) }
+        return .key(usage: key.usage, modifiers: mods)
+    }
+
+    /// The Globe (fn) key's configured short-press action, as the pedal could do it.
+    static var globeAction: SystemAction? {
+        // AppleFnUsageType: 0 nothing, 1 change input source, 2 emoji, 3 dictation. Unset = 1.
+        let type = UserDefaults(suiteName: "com.apple.HIToolbox")?.object(forKey: "AppleFnUsageType") as? Int ?? 1
+        switch type {
+        case 1: return .switchInputSource
+        case 2: return .emojiPicker
+        default: return nil
+        }
+    }
 }

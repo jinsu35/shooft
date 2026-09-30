@@ -197,6 +197,18 @@ final class AppModel: ObservableObject {
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .flagsChanged]) { [weak self] event in
             guard let self, let index = self.recordingRow else { return event }
             if event.type == .flagsChanged {
+                // Caps Lock is 한/영 on Korean Macs; Globe (fn) does whatever it is set to.
+                if event.keyCode == 57 || event.keyCode == 63 {
+                    let action: SystemAction? = event.keyCode == 57 ? .switchInputSource : SystemAction.globeAction
+                    if let action {
+                        self.rows[index] = PedalRow(action.setting)
+                        self.status = "\(action.label) 단축키(\(action.setting.shortcutText))를 페달이 보내도록 설정했습니다."
+                    } else {
+                        self.status = "지구본 키의 현재 동작(받아쓰기 등)은 페달로 낼 수 없습니다."
+                    }
+                    self.stopRecording()
+                    return nil
+                }
                 let down = event.modifierFlags.intersection([.shift, .control, .option, .command])
                 if down.isEmpty {
                     if let foot = self.pendingFootModifier {
@@ -212,6 +224,14 @@ final class AppModel: ObservableObject {
             self.pendingFootModifier = nil
             if event.keyCode == 0x35 && event.modifierFlags.intersection([.shift, .control, .option, .command]).isEmpty {
                 self.stopRecording()  // Escape: cancel
+                return nil
+            }
+            // Physical 한/영 (kana, 104) / 한자 (eisu, 102) keys on Korean external keyboards.
+            if event.keyCode == 104 || event.keyCode == 102 {
+                let action = SystemAction.switchInputSource
+                self.rows[index] = PedalRow(action.setting)
+                self.status = "\(action.label) 단축키(\(action.setting.shortcutText))를 페달이 보내도록 설정했습니다."
+                self.stopRecording()
                 return nil
             }
             guard let key = PlainKey.from(keycode: Int(event.keyCode)) else {
